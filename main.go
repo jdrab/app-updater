@@ -2,7 +2,7 @@ package main
 
 import (
 	"archive/zip"
-    "context"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
@@ -57,14 +57,14 @@ func main() {
 
 	// required flags
 	downloadURLFlag := cli.String("url", "", "https://server/update-1.0.2.zip (Required)")
-    // whatever server requires to identify exact platform and version of client app
+	// whatever server requires to identify exact platform and version of client app
 	clientVersionFlag := cli.String("client", "", "1.0.1 (win;x64;10_1703) (Required)")
 	updateChecksumFlag := cli.String("checksum", "", "package sha256 sum (Required)")
 
 	// "optional" flags
 	installDirFlag := cli.String("installdir", defaultInstallationDir, "directory where to unzip archive,default to directory where updater is located")
 	serviceFlag := cli.String("service", "kbc-core", "KBC service name")
-    //the app will be killed for now
+	//the app will be killed for now
 	exeFlag := cli.String("app", config.AppName, "Client app name to be >killed< before update extraction")
 
 	verboseFlag := cli.Bool("verbose", false, "")
