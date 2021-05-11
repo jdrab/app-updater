@@ -145,8 +145,8 @@ func main() {
 		}
 	}
 	//End application and stop the service
-	platform.KillProcessByName(config.AppName)
-	platform.StopService(config.ServiceName)
+	platform.KillProcessByName(*exeFlag)
+	platform.StopService(*serviceFlag)
 
 	// file is downloaded and checksum is valid at this point let's extract it
 	archive, err := fastzip.NewExtractor(filename, ".")
