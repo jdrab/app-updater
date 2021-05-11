@@ -3,8 +3,6 @@ package main
 import (
 	"archive/zip"
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -20,33 +18,28 @@ import (
 	"github.com/jdrab/app-updater/serviceconfig"
 )
 
-type logWriter struct {
-}
-
-func (writer logWriter) Write(bytes []byte) (int, error) {
-	return fmt.Print(time.Now().Format(time.RFC3339) + " [ DEBUG ] " + string(bytes))
-}
-
-func basicAuth(username string, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
-
 // UpdateResponse is a json response to update request by an updater
 type UpdateResponse struct {
 	URL      string `json:"url"`
 	Checksum string `json:"sha256"`
 }
 
-func updateResponseParse(body []byte) (*UpdateResponse, error) {
-	var resp = new(UpdateResponse)
-	err := json.Unmarshal([]byte(body), &resp)
-	return resp, err
-}
+// func updateResponseParse(body []byte) (*UpdateResponse, error) {
+// 	var resp = new(UpdateResponse)
+// 	err := json.Unmarshal([]byte(body), &resp)
+// 	return resp, err
+// }
 
 func init() {
+	logFile, err := os.OpenFile("updater.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.SetPrefix(time.Now().Format(time.RFC3339) + " ")
 	log.SetFlags(0)
-	log.SetOutput(new(logWriter))
+	log.SetOutput(logFile)
+	log.Println("init..")
+
 }
 
 var config = serviceconfig.Load()
@@ -58,14 +51,14 @@ func main() {
 	// required flags
 	downloadURLFlag := cli.String("url", "", "https://server/update-1.0.2.zip (Required)")
 	// whatever server requires to identify exact platform and version of client app
-	clientVersionFlag := cli.String("client", "", "1.0.1 (win;x64;10_1703) (Required)")
+	clientVersionFlag := cli.String("client", "", "1.0.1 (platform;arch;os_version) (Required)")
 	updateChecksumFlag := cli.String("checksum", "", "package sha256 sum (Required)")
 
 	// "optional" flags
 	installDirFlag := cli.String("installdir", defaultInstallationDir, "directory where to unzip archive,default to directory where updater is located")
-	serviceFlag := cli.String("service", "kbc-core", "KBC service name")
+	serviceFlag := cli.String("service", "my-service", "service name")
 	//the app will be killed for now
-	exeFlag := cli.String("app", config.AppName, "Client app name to be >killed< before update extraction")
+	exeFlag := cli.String("app", config.AppName, "Client app name to be >killed< before unpacking update")
 
 	verboseFlag := cli.Bool("verbose", false, "")
 
@@ -99,7 +92,7 @@ func main() {
 		if value == "" {
 			fmt.Println("Usage:\n", os.Args[0])
 			cli.PrintDefaults()
-			fmt.Println("\nError: Missing required flag", strings.TrimSuffix(k, "Cmd"), "please read usage")
+			fmt.Println("\nerror: Missing required flag", strings.TrimSuffix(k, "Cmd"), "please read usage")
 			os.Exit(1)
 		}
 	}

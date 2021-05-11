@@ -5,15 +5,15 @@ import (
 )
 
 type ServiceConfig struct {
-	ServiceName            string `json:"name"`
-	AppName                string `json:"appName"`
-	Version                string `json:"version"`
+	ServiceName string `json:"name"`
+	AppName     string `json:"appName"`
+	Version     string `json:"version"`
 }
 
 // Load now you know what
 func Load() ServiceConfig {
 	configuration := make(map[string]ServiceConfig)
-	defaultVersion := "go-0.0.1"
+	defaultVersion := "app-updater-0.0.1"
 
 	var winConfig = ServiceConfig{
 		ServiceName: "my-service",
@@ -26,7 +26,6 @@ func Load() ServiceConfig {
 		AppName:     "sample-client-app",
 		Version:     defaultVersion,
 	}
-
 
 	configuration["windows"] = winConfig
 	configuration["linux"] = linuxConfig

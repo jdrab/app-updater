@@ -36,7 +36,7 @@ func FromURL(saveTo string, url string, verbose bool) (string, error) {
 	// output, err := os.Create(filename)
 	n, err := io.Copy(output, zipResp.Body)
 	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
+		fmt.Println("error while downloading", url, "-", err)
 		return string(""), err
 	}
 	if Verbose {
