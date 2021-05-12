@@ -149,7 +149,7 @@ func main() {
 	platform.StopService(*serviceFlag)
 
 	// file is downloaded and checksum is valid at this point let's extract it
-	archive, err := fastzip.NewExtractor(filename, ".")
+	archive, err := fastzip.NewExtractor(filename, *installDirFlag)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func main() {
 
 	if *verboseFlag {
 		log.Printf("extracting %v", filename)
-		log.Printf("extracting to %v", defaultInstallationDir)
+		log.Printf("extracting to %v", *installDirFlag)
 	}
 	// Extract archive files
 	if err = archive.Extract(context.Background()); err != nil {
