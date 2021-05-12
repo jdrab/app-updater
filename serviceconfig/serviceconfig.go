@@ -13,7 +13,7 @@ type ServiceConfig struct {
 // Load now you know what
 func Load() ServiceConfig {
 	configuration := make(map[string]ServiceConfig)
-	defaultVersion := "app-updater-0.0.1"
+	defaultVersion := "app-updater-0.1.0"
 
 	var winConfig = ServiceConfig{
 		ServiceName: "my-service",
