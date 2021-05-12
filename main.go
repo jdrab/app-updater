@@ -92,7 +92,7 @@ func main() {
 		if value == "" {
 			fmt.Println("Usage:\n", os.Args[0])
 			cli.PrintDefaults()
-			fmt.Println("\nerror: Missing required flag", strings.TrimSuffix(k, "Cmd"), "please read usage")
+			fmt.Println("\nerror: missing required flag", strings.TrimSuffix(k, "Cmd"), "please read usage")
 			os.Exit(1)
 		}
 	}
@@ -113,12 +113,12 @@ func main() {
 	filename = tokens[len(tokens)-1] // return -1 slice
 
 	if *verboseFlag {
-		log.Printf("Filename %v", filename)
+		log.Printf("filename %v", filename)
 	}
 
 	// Check if it already exists
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		log.Println("Update zip does not exist, must be downloaded first.")
+		log.Println("update zip does not exist, must be downloaded first")
 		// Archive does not exist, let's download it
 		filename, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
 		if err != nil {
@@ -130,14 +130,14 @@ func main() {
 	// If it's already downloaded verify checksum
 	_, err := download.VerifyChecksum(filename, *updateChecksumFlag)
 	if err != nil {
-		log.Printf("File exists but checksum is invalid. re-downloading file from %v => %v\n", *downloadURLFlag, filename)
+		log.Printf("error: file exists but checksum is invalid. re-downloading file from %v => %v\n", *downloadURLFlag, filename)
 
 		filename, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
 		if err != nil {
 			log.Fatalf("FATAL: %v", err)
 			os.Exit(1)
 		}
-		log.Printf("Download successful")
+		log.Printf("download successful")
 
 		_, err := download.VerifyChecksum(filename, *updateChecksumFlag)
 		if err != nil {
@@ -159,8 +159,8 @@ func main() {
 	archive.RegisterDecompressor(zip.Deflate, fastzip.FlateDecompressor())
 
 	if *verboseFlag {
-		log.Printf("Extracting %v", filename)
-		log.Printf("Extracting to %v", defaultInstallationDir)
+		log.Printf("extracting %v", filename)
+		log.Printf("extracting to %v", defaultInstallationDir)
 	}
 	// Extract archive files
 	if err = archive.Extract(context.Background()); err != nil {

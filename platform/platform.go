@@ -9,9 +9,9 @@ var Verbose bool
 
 // ServiceConfig - app and service config structure
 type ServiceConfig struct {
-	ServiceName            string `json:"name"`
-	AppName                string `json:"appName"`
-	Version                string `json:"version"`
+	ServiceName string `json:"name"`
+	AppName     string `json:"appName"`
+	Version     string `json:"version"`
 }
 
 // KillProcessByName calls killProcessByName for required platform
@@ -19,11 +19,11 @@ func KillProcessByName(appname string) {
 	ok, err := killProcessByName(appname)
 
 	if err != nil {
-		log.Printf("KillProcessByName error %v", err)
+		log.Printf("error killing process %v\n %v", appname, err)
 	}
 
 	if ok && Verbose {
-		log.Printf("KillProcessByName - Ok")
+		log.Printf("%v killed", appname)
 	}
 
 }
@@ -32,11 +32,11 @@ func KillProcessByName(appname string) {
 func StartService(service string) {
 	ok, err := startService(service)
 	if err != nil {
-		log.Printf("StartService error %v", err)
+		log.Printf("error starting service %v\n %v", service, err)
 	}
 
 	if ok && Verbose {
-		log.Printf("StartService - Ok")
+		log.Printf("service %v started successfully", service)
 	}
 
 }
@@ -45,10 +45,10 @@ func StartService(service string) {
 func StopService(service string) {
 	ok, err := stopService(service)
 	if err != nil {
-		log.Printf("StopService error %v", err)
+		log.Printf("error stoping service %v\n %v", service, err)
 	}
 	if ok && Verbose {
-		log.Printf("StopService - Ok")
+		log.Printf("service %v stopped successfully", service)
 	}
 
 }
