@@ -19,7 +19,7 @@ func KillProcessByName(appname string) {
 	ok, err := killProcessByName(appname)
 
 	if err != nil {
-		log.Printf("error killing process %v\n %v", appname, err)
+		log.Printf("error killing process %v: %v", appname, err)
 	}
 
 	if ok && Verbose {
@@ -32,7 +32,7 @@ func KillProcessByName(appname string) {
 func StartService(service string) {
 	ok, err := startService(service)
 	if err != nil {
-		log.Printf("error starting service %v\n %v", service, err)
+		log.Printf("error starting service %v: %v", service, err)
 	}
 
 	if ok && Verbose {
@@ -45,7 +45,7 @@ func StartService(service string) {
 func StopService(service string) {
 	ok, err := stopService(service)
 	if err != nil {
-		log.Printf("error stoping service %v\n %v", service, err)
+		log.Printf("error stopping service %v\n %v", service, err)
 	}
 	if ok && Verbose {
 		log.Printf("service %v stopped successfully", service)
