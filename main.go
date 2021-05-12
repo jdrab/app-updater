@@ -33,12 +33,12 @@ type UpdateResponse struct {
 func init() {
 	logFile, err := os.OpenFile("updater.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	log.SetPrefix(time.Now().Format(time.RFC3339) + " ")
 	log.SetFlags(0)
 	log.SetOutput(logFile)
-	log.Println("init..")
+	log.Println("init")
 
 }
 
@@ -117,31 +117,34 @@ func main() {
 	}
 
 	// Check if it already exists
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
 		log.Println("update zip does not exist, must be downloaded first")
 		// Archive does not exist, let's download it
 		filename, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
 		if err != nil {
-			log.Fatalf("FATAL: %v", err)
+			log.Printf("fatal error: %v", err)
+			os.Exit(2)
 		}
 
 	}
 
 	// If it's already downloaded verify checksum
-	_, err := download.VerifyChecksum(filename, *updateChecksumFlag)
+	_, err = download.VerifyChecksum(filename, *updateChecksumFlag)
 	if err != nil {
 		log.Printf("error: file exists but checksum is invalid. re-downloading file from %v => %v\n", *downloadURLFlag, filename)
 
 		filename, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
 		if err != nil {
-			log.Fatalf("FATAL: %v", err)
-			os.Exit(1)
+			log.Printf("fatal error: %v", err)
+			os.Exit(3)
 		}
 		log.Printf("download successful")
 
 		_, err := download.VerifyChecksum(filename, *updateChecksumFlag)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("error: checksum verification failed - %v", err)
+			os.Exit(4)
 		}
 	}
 	//End application and stop the service
@@ -151,7 +154,8 @@ func main() {
 	// file is downloaded and checksum is valid at this point let's extract it
 	archive, err := fastzip.NewExtractor(filename, *installDirFlag)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("fatal error: failed to create extractor - %v", err)
+		os.Exit(5)
 	}
 	defer archive.Close()
 
@@ -162,12 +166,24 @@ func main() {
 		log.Printf("extracting %v", filename)
 		log.Printf("extracting to %v", *installDirFlag)
 	}
+
 	// Extract archive files
-	if err = archive.Extract(context.Background()); err != nil {
-		log.Fatal(err)
+	err = archive.Extract(context.Background())
+	if err != nil {
+		log.Printf("fatal error: update extraction failed - %v", err)
+		os.Exit(6)
 	}
 
 	// start service as last thing
 	platform.StartService(config.ServiceName)
+
+	// delete the update file if everything succeed
+	log.Printf("deleting update file")
+	err = os.Remove(filename)
+	if err != nil {
+		log.Printf("error: deleting update file %v failed - %v", filename, err)
+	}
+
+	log.Printf("done\n")
 
 }
