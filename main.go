@@ -13,10 +13,12 @@ import (
 
 	"github.com/saracen/fastzip"
 
+	"github.com/jdrab/app-updater/config"
 	"github.com/jdrab/app-updater/download"
 	"github.com/jdrab/app-updater/platform"
-	"github.com/jdrab/app-updater/serviceconfig"
 )
+
+var Version string = "0.2.0"
 
 // UpdateResponse is a json response to update request by an updater
 type UpdateResponse struct {
@@ -42,9 +44,31 @@ func init() {
 
 }
 
-var config = serviceconfig.Load()
+/**
+ * @var		mixed	config
+ * @global
+ */
+//
+
+var conf = config.Load()
+var runtimeApplication string
+var runtimeService string
 
 func main() {
+
+	if runtimeApplication != "" {
+		conf.App = runtimeApplication
+	}
+	if runtimeService != "" {
+		conf.Service = runtimeService
+	}
+
+	// fmt.Printf("\nconfig.runtimeApplication je %s\n", runtimeApplication)
+
+	// if runtimeService == "" {
+	// 	runtimeService = configuration[runtime.GOOS].Service
+	// }
+
 	cli := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	defaultInstallationDir, _ := filepath.Abs(".")
 
@@ -58,7 +82,7 @@ func main() {
 	installDirFlag := cli.String("installdir", defaultInstallationDir, "directory where to unzip archive,default to directory where updater is located")
 	serviceFlag := cli.String("service", "my-service", "service name")
 	//the app will be killed for now
-	exeFlag := cli.String("app", config.AppName, "Client app name to be >killed< before unpacking update")
+	exeFlag := cli.String("app", conf.App, "Client app name to be >killed< before unpacking update")
 
 	verboseFlag := cli.Bool("verbose", false, "")
 
@@ -83,7 +107,7 @@ func main() {
 	optFlags["exeCmd"] = *exeFlag
 
 	if *versionCmd {
-		fmt.Printf("%s version %s\n", os.Args[0], config.Version)
+		fmt.Printf("%s %s\n", os.Args[0], Version)
 		os.Exit(0)
 	}
 
@@ -111,17 +135,13 @@ func main() {
 	var filename string
 	// get the filename from url like/this/is/the_archive.zip
 	filename = tokens[len(tokens)-1] // return -1 slice
-
-	if *verboseFlag {
-		log.Printf("filename %v", filename)
-	}
-
 	// Check if it already exists
 	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
-		log.Println("update zip does not exist, must be downloaded first")
+		log.Println("downloading update..")
 		// Archive does not exist, let's download it
-		filename, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
+		_, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
+
 		if err != nil {
 			log.Printf("fatal error: %v", err)
 			os.Exit(2)
@@ -132,19 +152,19 @@ func main() {
 	// If it's already downloaded verify checksum
 	_, err = download.VerifyChecksum(filename, *updateChecksumFlag)
 	if err != nil {
-		log.Printf("error: file exists but checksum is invalid. re-downloading file from %v => %v\n", *downloadURLFlag, filename)
+		log.Printf("error: file exists but checksum is invalid. re-downloading file \nfrom\t%v \nto\t%v\n", *downloadURLFlag, filename)
 
 		filename, err = download.FromURL(filename, *downloadURLFlag, *verboseFlag)
 		if err != nil {
 			log.Printf("fatal error: %v", err)
-			os.Exit(3)
+			os.Exit(2)
 		}
 		log.Printf("download successful")
 
 		_, err := download.VerifyChecksum(filename, *updateChecksumFlag)
 		if err != nil {
 			log.Printf("error: checksum verification failed - %v", err)
-			os.Exit(4)
+			os.Exit(3)
 		}
 	}
 	//End application and stop the service
@@ -155,7 +175,7 @@ func main() {
 	archive, err := fastzip.NewExtractor(filename, *installDirFlag)
 	if err != nil {
 		log.Printf("fatal error: failed to create extractor - %v", err)
-		os.Exit(5)
+		os.Exit(4)
 	}
 	defer archive.Close()
 
@@ -171,15 +191,16 @@ func main() {
 	err = archive.Extract(context.Background())
 	if err != nil {
 		log.Printf("fatal error: update extraction failed - %v", err)
-		os.Exit(6)
+		os.Exit(5)
 	}
 
 	// start service as last thing
-	platform.StartService(config.ServiceName)
+	platform.StartService(conf.Service)
 
 	// delete the update file if everything succeed
 	log.Printf("deleting update file")
 	err = os.Remove(filename)
+
 	if err != nil {
 		log.Printf("error: deleting update file %v failed - %v", filename, err)
 	}

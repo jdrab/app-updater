@@ -7,13 +7,6 @@ import (
 // Verbose if set to true package will print more information
 var Verbose bool
 
-// ServiceConfig - app and service config structure
-type ServiceConfig struct {
-	ServiceName string `json:"name"`
-	AppName     string `json:"appName"`
-	Version     string `json:"version"`
-}
-
 // KillProcessByName calls killProcessByName for required platform
 func KillProcessByName(appname string) {
 	ok, err := killProcessByName(appname)

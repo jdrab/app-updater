@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -18,8 +17,7 @@ var Verbose bool
 func FromURL(saveTo string, url string, verbose bool) (string, error) {
 	output, err := os.Create(saveTo)
 	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+		return "", err
 	}
 
 	if Verbose {
@@ -27,16 +25,21 @@ func FromURL(saveTo string, url string, verbose bool) (string, error) {
 	}
 
 	zipResp, err := http.Get(url)
+
 	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
+		return "", err
 	}
+
+	if zipResp.StatusCode != 200 {
+		return "", errors.New(zipResp.Status) //&httpError{"wtf", zipResp.StatusCode}
+	}
+
 	defer zipResp.Body.Close()
 
 	// output, err := os.Create(filename)
 	n, err := io.Copy(output, zipResp.Body)
 	if err != nil {
-		fmt.Println("error while downloading", url, "-", err)
+		log.Println("error while downloading", url, "-", err)
 		return string(""), err
 	}
 	if Verbose {
@@ -58,16 +61,17 @@ func VerifyChecksum(fileToCheck string, checksum string) (bool, error) {
 	hasher := sha256.New()
 
 	if _, err := io.Copy(hasher, f); err != nil {
-		log.Fatal(err)
+		log.Printf("error: copy failed %v", err)
+		os.Exit(3)
 	}
 
 	downloadedFileChecksum := hex.EncodeToString(hasher.Sum(nil))
 
 	if downloadedFileChecksum != checksum {
 		if Verbose {
-			log.Printf("Checksum mismatch! %v != %v\n", checksum, downloadedFileChecksum)
+			log.Printf("checksum mismatch! %v != %v\n", checksum, downloadedFileChecksum)
 		}
-		return false, errors.New("Checksum mismatched")
+		return false, errors.New("checksum mismatched")
 	}
 
 	return true, nil
