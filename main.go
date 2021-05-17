@@ -19,6 +19,8 @@ import (
 )
 
 var Version string = "0.2.0"
+var runtimeApp string
+var runtimeService string
 
 // UpdateResponse is a json response to update request by an updater
 type UpdateResponse struct {
@@ -51,23 +53,15 @@ func init() {
 //
 
 var conf = config.Load()
-var runtimeApplication string
-var runtimeService string
 
 func main() {
 
-	if runtimeApplication != "" {
-		conf.App = runtimeApplication
+	if runtimeApp != "" {
+		conf.App = runtimeApp
 	}
 	if runtimeService != "" {
 		conf.Service = runtimeService
 	}
-
-	// fmt.Printf("\nconfig.runtimeApplication je %s\n", runtimeApplication)
-
-	// if runtimeService == "" {
-	// 	runtimeService = configuration[runtime.GOOS].Service
-	// }
 
 	cli := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	defaultInstallationDir, _ := filepath.Abs(".")
@@ -80,7 +74,7 @@ func main() {
 
 	// "optional" flags
 	installDirFlag := cli.String("installdir", defaultInstallationDir, "directory where to unzip archive,default to directory where updater is located")
-	serviceFlag := cli.String("service", "my-service", "service name")
+	serviceFlag := cli.String("service", conf.Service, "service name")
 	//the app will be killed for now
 	exeFlag := cli.String("app", conf.App, "Client app name to be >killed< before unpacking update")
 
